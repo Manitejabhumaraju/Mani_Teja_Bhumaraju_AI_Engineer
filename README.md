@@ -198,18 +198,6 @@ This repo was built with Claude as the primary pair-programming assistant.
 
 ---
 
-## Open questions for the walkthrough
-
-I'd be happy to defend any of these on the call:
-
-1. **Why deterministic engine, not function-calling tools?** The playbook is fixed — same thresholds for every store. Hardcoding them in `engine.py` means the LLM can't drift to "let's call it 0.88 utilization this time." Function-calling tools would just move the same constants behind an LLM-shaped wrapper.
-2. **Why one MCP server and not several?** The brief says "at least one." A second filesystem MCP for docs would be duplication — the playbook compiles into `engine.py` at boot, not at request time. SQLite-over-HTTP is the one MCP that pulls its weight (ad-hoc analytics outside the playbook).
-3. **Why HTTP MCP, not stdio?** Windows native deployment without WSL. Trade-off is exposing one extra port; in return, the MCP server can be a separately scaled container.
-4. **Why are agents classes if LangGraph accepts functions?** OO wrappers make each agent independently testable (inject a mock `deps`), give a clean home for an agent's prompt + retry policy, and let the supervisor pattern slot in cleanly if we ever go that direction.
-5. **What scales poorly?** Currently single-process, in-memory `MemorySaver`. For multi-user prod you'd swap to `PostgresSaver` for checkpointing and pin sessions to a worker (or accept the cost of full state reload per turn).
-
----
-
 ## License & attribution
 
 Take-home submission. Not licensed for production use without permission.
