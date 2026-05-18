@@ -1,0 +1,14 @@
+{
+  "name": "loadshare-sqlite-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "SQLite MCP server via HTTP for Loadshare RCA agent",
+  "scripts": {
+    "start": "node sqlite-server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "better-sqlite3": "^11.8.1"
+  }
+}

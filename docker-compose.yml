@@ -1,0 +1,82 @@
+# Docker Compose for the Loadshare RCA Agent.
+#
+# Three services on one network:
+#   mcp        — SQLite MCP server (Node Express, port 3002)
+#   backend    — FastAPI + LangGraph + WebSocket (port 8000)
+#   frontend   — Streamlit UI (port 8501)
+#
+# Optional services (commented):
+#   redis      — semantic cache; uncomment + set REDIS_URL in .env
+#
+# Usage:
+#   docker compose up --build
+#   open http://localhost:8501  (login: demo / demo)
+#
+# The data/ directory is mounted so the SQLite DB persists across rebuilds.
+# Set NVIDIA_API_KEY in .env before running.
+
+services:
+  mcp:
+    build:
+      context: ./mcp-servers
+      dockerfile: Dockerfile
+    container_name: loadshare-mcp
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./data:/app/data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: loadshare-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Point the backend at the MCP service over the docker network
+      - SQLITE_MCP_URL=http://mcp:3002
+      # Redis is optional — leave unset or wire it to the redis service below
+      # - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      mcp:
+        condition: service_healthy
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: loadshare-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE=http://backend:8000
+      - WS_URL=ws://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    command: ["streamlit", "run", "frontend/app.py", "--server.address", "0.0.0.0"]
+
+  # Uncomment to enable semantic cache:
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: loadshare-redis
+  #   ports:
+  #     - "6379:6379"
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     retries: 3

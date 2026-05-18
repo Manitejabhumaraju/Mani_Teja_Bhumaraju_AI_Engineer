@@ -1,0 +1,61 @@
+# Keep the Docker build context small and clean.
+# Anything not needed at runtime is excluded.
+
+# Secrets — passed in via env_file or -e at runtime
+.env
+.env.local
+.env.*.local
+
+# Local installs
+.venv/
+venv/
+env/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.so
+
+# Tests / dev artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+*.log
+logs/
+
+# Node modules — rebuilt inside the image
+mcp-servers/node_modules/
+
+# Build state
+build/
+dist/
+*.egg-info/
+
+# Git / IDE
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local DB — built inside the image
+data/loadshare.db
+data/loadshare.db-*
+data/transactions.db
+data/transactions.db-*
+
+# Markdown docs not needed in the image (keep README for /app/README.md)
+PRD.md
+TEST_QUERIES.md
+CHANGES.md
+
+# These scripts are for the host, not the container
+run.bat
+run.sh
